@@ -2,6 +2,15 @@
 
 A Cross-Platrom Twitter Clone created with Quasar Framework, VueJS & Firebase
 
+## Bookmarks & Messaging
+
+- Tap the bookmark icon on any qweet to save it - a bookmark is stored as a `bookmarked` flag on the qweet itself.
+- The **Bookmarks** page lists everything you have saved. Select any number of bookmarks, hit **Send to friends**, pick one or more friends and (optionally) add a note.
+- Sending writes one document per recipient to the `messages` Cloud Firestore collection. Each document holds the recipient, your note and a copy of every shared qweet, so a message still reads correctly after the original qweet is deleted or un-bookmarked.
+- The **Messages** page lists the bookmark collections you have sent and lets you delete them.
+
+Qwitter has no accounts system yet, so the friends you can message are defined in `src/data/friends.js`.
+
 ## Setup Firebase
 - Create a new Firebase project named Qwitter
 - Create a Web App named Qwitter
