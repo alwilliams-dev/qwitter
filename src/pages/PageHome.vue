@@ -89,6 +89,14 @@
                   round
                 />
                 <q-btn
+                  @click="toggleSaved(qweet)"
+                  :color="qweet.saved ? 'primary' : 'grey'"
+                  :icon="qweet.saved ? 'fas fa-bookmark' : 'far fa-bookmark'"
+                  size="sm"
+                  flat
+                  round
+                />
+                <q-btn
                   @click="deleteQweet(qweet)"
                   color="grey"
                   icon="fas fa-trash"
@@ -119,13 +127,15 @@ export default {
         //   id: 'ID1',
         //   content: 'Be your own hero, its cheaper than a movie ticket.',
         //   date: 1611653238221,
-        //   liked: false
+        //   liked: false,
+        //   saved: false
         // },
         // {
         //   id: 'ID2',
         //   content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed feugiat justo id viverra consequat. Integer feugiat lorem faucibus est ornare scelerisque. Donec tempus, nunc vitae semper sagittis, odio magna semper ipsum, et laoreet sapien mauris vitae arcu.',
         //   date: 1611653252444,
-        //   liked: true
+        //   liked: true,
+        //   saved: false
         // },
       ]
     }
@@ -135,7 +145,8 @@ export default {
       let newQweet = {
         content: this.newQweetContent,
         date: Date.now(),
-        liked: false
+        liked: false,
+        saved: false
       }
       // this.qweets.unshift(newQweet)
       db.collection('qweets').add(newQweet).then(function(docRef) {
@@ -161,6 +172,17 @@ export default {
       })
       .catch(function(error) {
         // The document probably doesn't exist.
+        console.error('Error updating document: ', error)
+      })
+    },
+    toggleSaved(qweet) {
+      db.collection('qweets').doc(qweet.id).update({
+        saved: !qweet.saved
+      })
+      .then(function() {
+        console.log('Document successfully updated!')
+      })
+      .catch(function(error) {
         console.error('Error updating document: ', error)
       })
     }
