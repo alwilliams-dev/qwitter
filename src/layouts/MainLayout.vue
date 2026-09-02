@@ -46,6 +46,18 @@
           <q-item-section class="text-h6 text-weight-bold">Home</q-item-section>
         </q-item>
         <q-item
+          to="/saved"
+          v-ripple
+          clickable
+          exact
+        >
+          <q-item-section avatar>
+            <q-icon name="bookmark" size="md" />
+          </q-item-section>
+
+          <q-item-section class="text-h6 text-weight-bold">Saved</q-item-section>
+        </q-item>
+        <q-item
           to="/about"
           v-ripple
           clickable
