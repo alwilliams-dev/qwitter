@@ -89,6 +89,14 @@
                   round
                 />
                 <q-btn
+                  @click="openBookmarkDialog(qweet)"
+                  :color="isQweetBookmarked(qweet) ? 'primary' : 'grey'"
+                  :icon="isQweetBookmarked(qweet) ? 'fas fa-bookmark' : 'far fa-bookmark'"
+                  size="sm"
+                  flat
+                  round
+                />
+                <q-btn
                   @click="deleteQweet(qweet)"
                   color="grey"
                   icon="fas fa-trash"
@@ -102,6 +110,67 @@
         </transition-group>
       </q-list>
     </q-scroll-area>
+
+    <!-- Bookmark Dialog -->
+    <q-dialog v-model="showBookmarkDialog" persistent>
+      <q-card style="min-width: 400px">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Add to Collection</div>
+          <q-space />
+          <q-btn icon="close" flat round dense @click="showBookmarkDialog = false" />
+        </q-card-section>
+
+        <q-card-section>
+          <p class="q-mb-md text-body2">Select a collection to add this qweet:</p>
+          
+          <div v-if="userCollections.length === 0" class="text-center text-grey">
+            <p>No collections yet. <router-link to="/collections">Create one</router-link></p>
+          </div>
+
+          <q-list v-else separator>
+            <q-item
+              v-for="collection in userCollections"
+              :key="collection.id"
+              clickable
+              @click="addQweetToCollection(collection)"
+            >
+              <q-item-section>
+                <q-item-label>{{ collection.name }}</q-item-label>
+                <q-item-label caption>{{ collection.qweets ? collection.qweets.length : 0 }} qweets</q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-checkbox
+                  :model-value="isQweetInCollection(selectedQweet, collection)"
+                  @update:model-value="val => val ? addQweetToCollection(collection) : removeQweetFromCollection(collection)"
+                  @click.stop
+                />
+              </q-item-section>
+            </q-item>
+          </q-list>
+
+          <q-separator class="q-my-md" />
+
+          <q-input
+            v-model="newCollectionName"
+            label="New Collection Name"
+            outlined
+            dense
+            placeholder="Create new collection..."
+            @keyup.enter="createNewCollection"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn
+            v-if="newCollectionName"
+            label="Create & Add"
+            color="primary"
+            @click="createNewCollection"
+          />
+          <q-btn label="Done" flat @click="showBookmarkDialog = false" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -114,20 +183,11 @@ export default {
   data() {
     return {
       newQweetContent: '',
-      qweets: [
-        // {
-        //   id: 'ID1',
-        //   content: 'Be your own hero, its cheaper than a movie ticket.',
-        //   date: 1611653238221,
-        //   liked: false
-        // },
-        // {
-        //   id: 'ID2',
-        //   content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed feugiat justo id viverra consequat. Integer feugiat lorem faucibus est ornare scelerisque. Donec tempus, nunc vitae semper sagittis, odio magna semper ipsum, et laoreet sapien mauris vitae arcu.',
-        //   date: 1611653252444,
-        //   liked: true
-        // },
-      ]
+      qweets: [],
+      userCollections: [],
+      showBookmarkDialog: false,
+      selectedQweet: null,
+      newCollectionName: ''
     }
   },
   methods: {
@@ -163,6 +223,125 @@ export default {
         // The document probably doesn't exist.
         console.error('Error updating document: ', error)
       })
+    },
+    openBookmarkDialog(qweet) {
+      this.selectedQweet = qweet
+      this.newCollectionName = ''
+      this.showBookmarkDialog = true
+      this.loadUserCollections()
+    },
+    loadUserCollections() {
+      db.collection('collections').onSnapshot(snapshot => {
+        this.userCollections = []
+        snapshot.forEach(doc => {
+          const collection = doc.data()
+          collection.id = doc.id
+          this.userCollections.push(collection)
+        })
+      })
+    },
+    isQweetBookmarked(qweet) {
+      return this.userCollections.some(collection => 
+        collection.qweets && collection.qweets.some(q => q.id === qweet.id)
+      )
+    },
+    isQweetInCollection(qweet, collection) {
+      if (!qweet || !collection.qweets) return false
+      return collection.qweets.some(q => q.id === qweet.id)
+    },
+    addQweetToCollection(collection) {
+      if (!this.selectedQweet) return
+
+      const qweetData = {
+        id: this.selectedQweet.id,
+        content: this.selectedQweet.content,
+        date: this.selectedQweet.date,
+        liked: this.selectedQweet.liked
+      }
+
+      // Check if qweet is already in collection
+      if (this.isQweetInCollection(this.selectedQweet, collection)) {
+        this.$q.notify({
+          type: 'info',
+          message: 'This qweet is already in the collection',
+          position: 'top'
+        })
+        return
+      }
+
+      const updatedQweets = collection.qweets ? [...collection.qweets, qweetData] : [qweetData]
+
+      db.collection('collections').doc(collection.id).update({
+        qweets: updatedQweets
+      })
+        .then(() => {
+          this.$q.notify({
+            type: 'positive',
+            message: `Added to "${collection.name}"`,
+            position: 'top'
+          })
+        })
+        .catch(error => {
+          console.error('Error adding qweet to collection:', error)
+          this.$q.notify({
+            type: 'negative',
+            message: 'Error adding qweet to collection',
+            position: 'top'
+          })
+        })
+    },
+    removeQweetFromCollection(collection) {
+      if (!this.selectedQweet || !collection.qweets) return
+
+      const updatedQweets = collection.qweets.filter(q => q.id !== this.selectedQweet.id)
+
+      db.collection('collections').doc(collection.id).update({
+        qweets: updatedQweets
+      })
+        .then(() => {
+          this.$q.notify({
+            type: 'positive',
+            message: 'Removed from collection',
+            position: 'top'
+          })
+        })
+        .catch(error => {
+          console.error('Error removing qweet:', error)
+          this.$q.notify({
+            type: 'negative',
+            message: 'Error removing qweet',
+            position: 'top'
+          })
+        })
+    },
+    createNewCollection() {
+      if (!this.newCollectionName.trim()) return
+
+      const newCollection = {
+        name: this.newCollectionName,
+        description: '',
+        qweets: [],
+        createdAt: Date.now(),
+        sharedWith: []
+      }
+
+      db.collection('collections').add(newCollection)
+        .then(docRef => {
+          const addedCollection = {
+            id: docRef.id,
+            ...newCollection
+          }
+          this.addQweetToCollection(addedCollection)
+          this.newCollectionName = ''
+        })
+        .catch(error => {
+          console.error('Error creating collection:', error)
+          this.$q.notify({
+            type: 'negative',
+            message: 'Error creating collection',
+            position: 'top'
+          })
+        })
     }
   },
   filters: {
@@ -191,6 +370,9 @@ export default {
         }
       })
     })
+
+    // Load collections for bookmark status
+    this.loadUserCollections()
   }
 }
 </script>
