@@ -308,31 +308,6 @@ export default {
           console.error('Failed to copy:', err)
         })
     },
-    removeQwestFromCollection(qweet) {
-      if (!this.selectedCollection) return
-
-      const updatedQweets = this.selectedCollection.qweets.filter(q => q.id !== qweet.id)
-
-      db.collection('collections').doc(this.selectedCollection.id).update({
-        qweets: updatedQweets
-      })
-        .then(() => {
-          this.selectedCollection.qweets = updatedQweets
-          this.$q.notify({
-            type: 'positive',
-            message: 'Qweet removed from collection',
-            position: 'top'
-          })
-        })
-        .catch(error => {
-          console.error('Error removing qweet:', error)
-          this.$q.notify({
-            type: 'negative',
-            message: 'Error removing qweet',
-            position: 'top'
-          })
-        })
-    },
     removeQweetFromCollection(qweet) {
       if (!this.selectedCollection) return
 
