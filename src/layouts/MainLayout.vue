@@ -1,14 +1,14 @@
 <template>
   <q-layout view="lHr lpR fFf">
 
-    <q-header bordered class="bg-white text-black">
+    <q-header bordered class="main-header">
       <q-toolbar>
         <q-btn dense flat round icon="menu" @click="left = !left" />
 
-        <q-toolbar-title class="text-weight-bold">
-          <span class="gt-sm">{{ $route.name }}</span>
+        <q-toolbar-title class="header-title">
+          <span class="header-route-name">{{ $route.name }}</span>
           <q-icon
-            class="header-icon q-pa-md lt-md"
+            class="header-mobile-icon"
             name="fas fa-dove"
             size="sm"
             color="primary"
@@ -26,7 +26,7 @@
       show-if-above
     >
       <q-icon
-        class="q-pa-md"
+        class="drawer-icon"
         name="fas fa-dove"
         size="lg"
         color="primary"
@@ -64,7 +64,7 @@
     <q-drawer show-if-above v-model="right" side="right" bordered>
       <q-input
         placeholder="Search Qwitter"
-        class="q-ma-md"
+        class="search-input"
         outlined
         rounded
         dense
@@ -78,7 +78,7 @@
         separator
         padding
       >
-        <q-item class="q-pa-md">
+        <q-item class="notification-item">
           <q-item-section>
             <q-item-label overline class="text-grey">Education</q-item-label>
             <q-item-label class="text-weight-bold">Something amazing happened!</q-item-label>
@@ -89,7 +89,7 @@
             <q-item-label caption>5 min ago</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item class="q-pa-md">
+        <q-item class="notification-item">
           <q-item-section>
             <q-item-label overline class="text-grey">Education</q-item-label>
             <q-item-label class="text-weight-bold">Something amazing happened!</q-item-label>
@@ -100,7 +100,7 @@
             <q-item-label caption>5 min ago</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item class="q-pa-md">
+        <q-item class="notification-item">
           <q-item-section>
             <q-item-label overline class="text-grey">Education</q-item-label>
             <q-item-label class="text-weight-bold">Something amazing happened!</q-item-label>
@@ -135,9 +135,34 @@ export default {
 </script>
 
 <style lang="sass">
-.header-icon
+.main-header
+  background-color: white
+  color: black
+
+.header-title
+  font-weight: bold
+
+.header-route-name
+  // Show on screens greater than 600px (gt-sm)
+  @media (min-width: 601px)
+    display: inline
+
+.header-mobile-icon
   position: absolute
   bottom: 0
   left: 50%
   transform: translateX(-50%)
+  padding: 1rem
+  // Hide on screens 1024px and above (not lt-md)
+  @media (min-width: 1024px)
+    display: none
+
+.drawer-icon
+  padding: 1rem
+
+.search-input
+  margin: 1rem
+
+.notification-item
+  padding: 1rem
 </style>
